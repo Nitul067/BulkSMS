@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+
+<!-- Content -->
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+      <div class="col-md-12">
+        <ul class="nav nav-pills flex-column flex-md-row mb-3">
+          <li class="nav-item">
+            <a class="nav-link active" href="javascript:void(0);"><i class="bx bx-user me-1"></i> Account</a>
+          </li>
+        </ul>
+        <div class="card mb-4">
+          <form id="formAccountSettings" method="POST" action="{% url 'account' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h5 class="card-header">Profile Details</h5>
+            <!-- Account -->
+            <div class="card-body">
+              <div class="d-flex align-items-start align-items-sm-center gap-4">
+                {% if user.profile.profile_picture %}
+                  <img
+                    src="{{ user.profile.profile_picture.url }}"
+                    alt="user-avatar"
+                    class="d-block rounded"
+                    height="100"
+                    width="100"
+                    id="uploadedAvatar"
+                  />
+                {% else %}
+                  <img
+                    src="{% static 'img/avatars/1.png' %}"
+                    alt="user-avatar"
+                    class="d-block rounded"
+                    height="100"
+                    width="100"
+                    id="uploadedAvatar"
+                  />
+                {% endif %}
+                <div class="button-wrapper">
+                  <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
+                    <!-- <span class="d-none d-sm-block">Upload new photo</span> -->
+                    <i class="bx bx-upload d-block d-sm-none"></i>
+                    {{ profile_form.profile_picture }}
+                  </label>
+                  <p class="text-muted mb-0">Allowed JPG, JPEG, GIF or PNG.</p>
+                </div>
+              </div>
+            </div>
+            <hr class="my-0" />
+            <div class="card-body">
+              <div class="row">
+                <div class="mb-3 col-md-6">
+                  <label for="firstName" class="form-label">First Name</label>
+                  {{ form.first_name }}
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label for="lastName" class="form-label">Last Name</label>
+                  {{ form.last_name }}
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label for="email" class="form-label">E-mail</label>
+                  {{ form.email }}
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label for="organization" class="form-label">Username</label>
+                  {{ form.username }}
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label" for="phoneNumber">Phone Number</label>
+                  <div class="input-group input-group-merge">
+                    {{ form.phone_number }}
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <ul class="errorlist">
+                    {% for field in form %}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <li style="color: red;">{{error}}</li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if form.non_field_errors %}
+                        <li style="color: red;">{{form.non_field_errors}}</li>
+                    {% endif %}
+                </ul>
+                <ul class="errorlist">
+                  {% for field in profile_form %}
+                      {% if field.errors %}
+                          {% for error in profile_form.errors %}
+                              <li style="color: red;">{{error}}</li>
+                          {% endfor %}
+                      {% endif %}
+                  {% endfor %}
+                  {% if profile_form.non_field_errors %}
+                      <li style="color: red;">{{profile_form.non_field_errors}}</li>
+                  {% endif %}
+                </ul>
+              </div>
+              <div class="mt-2">
+                <button type="submit" class="btn btn-primary me-2">Save changes</button>
+              </div>            
+            </div>
+          </form>
+          <!-- /Account -->
+        </div>
+        <div class="card">
+          <h5 class="card-header">Delete Account</h5>
+          <div class="card-body">
+            <div class="mb-3 col-12 mb-0">
+              <div class="alert alert-warning">
+                <h6 class="alert-heading fw-bold mb-1">Are you sure you want to delete your account?</h6>
+                <p class="mb-0">Once you delete your account, there is no going back. Please be certain.</p>
+              </div>
+            </div>
+            <form id="formAccountDeactivation" action="{% url 'delete_account' %}" method="POST">
+              {% csrf_token %}
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="accountDeactivation"
+                  id="accountActivation"
+                />
+                <label class="form-check-label" for="accountActivation"
+                  >I confirm my account deactivation</label
+                >
+              </div>
+              <button type="submit" class="btn btn-danger deactivate-account">Deactivate Account</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+<!-- / Content -->
+
+{% endblock content %}
