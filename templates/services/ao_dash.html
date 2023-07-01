@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card mb-4">
+            <h5 class="card-header">Upload Transactions</h5>
+            <div class="card-body">
+              <div class="d-flex align-items-start align-items-sm-center gap-4">
+                <form action="{% url 'upload_trans' %}" method="POST" enctype="multipart/form-data">  
+                    {% csrf_token %}
+                    <div class="button-wrapper">
+                      <label for="upload" class="btn btn-primary mb-4" tabindex="0">
+                        <i class="bx bx-upload d-block d-sm-none"></i>
+                        <input
+                          type="file"
+                          name="my_file" 
+                          id="upload"
+                          class="account-file-input"
+                          accept=".xlsx, .xls, .csv"
+                        />
+                      </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endblock content %}

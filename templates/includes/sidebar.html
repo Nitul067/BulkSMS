@@ -52,6 +52,33 @@
           </li>
         </ul>
       </li>
+
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">SERVICES</span>
+      </li>
+      <li class="menu-item">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+          <i class="menu-icon tf-icons bx bxs-dashboard"></i>
+          <div data-i18n="Authentications">Account Officer</div>
+        </a>
+        <ul class="menu-sub">
+          <li class="menu-item">
+            <a href="{% url 'ao_dash' %}" class="menu-link">
+              <div data-i18n="Basic">Dashboard</div>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'add_recharge' %}" class="menu-link">
+              <div data-i18n="Basic">Recharge</div>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'forgot_password' %}" class="menu-link">
+              <div data-i18n="Basic">Forgot Password</div>
+            </a>
+          </li>
+        </ul>
+      </li>
      
       <!-- Misc -->
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Misc</span></li>

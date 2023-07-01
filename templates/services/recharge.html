@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col mb-4 mb-md-0">
+          <div class="accordion mt-3" id="accordionExample">
+            <div class="card accordion-item active">
+              <h2 class="accordion-header" id="headingOne">
+                <button
+                  type="button"
+                  class="accordion-button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#accordionOne"
+                  aria-expanded="true"
+                  aria-controls="accordionOne"
+                >
+                Add Recharge Details
+                </button>
+              </h2>
+    
+              <div
+                id="accordionOne"
+                class="accordion-collapse collapse show"
+                data-bs-parent="#accordionExample"
+              >
+                <div class="accordion-body my-3">
+                    <div class=" demo-vertical-spacing demo-only-element">
+                        <form action="{% url 'add_recharge' %}" method="POST" enctype="multipart/form-data">  
+                            {% csrf_token %}
+                            <div class="row mb-5">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <select class="form-select" id="inputGroupSelect04" name="user_id" aria-label="Example select with button addon">
+                                        <option selected>Select Customer...</option>
+                                        {% for user in user_profile %}
+                                            {% if user.system_id %}
+                                                <option value="{{ user.user_id }}">{{ user.system_id }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label for="amount" class="form-label">Amount</label>
+                                    {{ form.amount }}
+                                </div>
+                                <div class="col-md-6">
+                                  <label for="sms_count" class="form-label">SMS Count</label>
+                                  {{ form.sms_count }}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    {{ form.status }}
+                                </div>
+                                <div class="col-md-6">
+                                  <label for="recharge_date" class="form-label">Recharge Date</label>
+                                  {{ form.recharge_date }}
+                                </div>
+                            </div>
+                            <button class="btn btn-primary d-grid" type="submit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+              </div>
+            </div>
+            <div class="card accordion-item">
+              <h2 class="accordion-header" id="headingTwo">
+                <button
+                  type="button"
+                  class="accordion-button collapsed"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#accordionTwo"
+                  aria-expanded="false"
+                  aria-controls="accordionTwo"
+                >
+                  Update Recharge Details
+                </button>
+              </h2>
+              <div
+                id="accordionTwo"
+                class="accordion-collapse collapse"
+                aria-labelledby="headingTwo"
+                data-bs-parent="#accordionExample"
+              >
+                <div class="accordion-body my-3">
+                  {% if pending_recharge %}
+                  <div class="table-responsive text-nowrap text-center">
+                    <table class="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>System ID</th>
+                          <th>Amount</th>
+                          <th>SMS Count</th>
+                          <th>Status</th>
+                          <th>Recharge Date</th>
+                        </tr>
+                      </thead>
+                      <tbody class="table-border-bottom-0">
+                        {% for recharge in pending_recharge %}
+                          <tr>
+                            <td><a href="{% url 'update_recharge' %}">{{ recharge.user.profile.system_id }}</a></td>
+                            <td>{{ recharge.amount }}</td>
+                            <td>{{ recharge.sms_count }}</td>
+                            <td>{{ recharge.status }}</td>
+                            <td>{{ recharge.recharge_date }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
