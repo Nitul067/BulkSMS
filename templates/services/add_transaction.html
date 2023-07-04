@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card mb-4">
+        <h5 class="card-header">Add Transaction</h5>
+        <div class="card-body">
+            <form action="{% url 'add_trans' %}" method="POST" enctype="multipart/form-data">  
+                {% csrf_token %}
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="amount" class="form-label">Customer</label>
+                        <div class="input-group">
+                            <select class="form-select" id="inputGroupSelect04" name="user_id" aria-label="Example select with button addon">
+                            <option selected>Select Customer...</option>
+                            {% for user in user_profile %}
+                                {% if user.system_id %}
+                                    <option value="{{ user.user_id }}">{{ user.system_id }}</option>
+                                {% endif %}
+                            {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="amount" class="form-label">Transaction Date</label>
+                        {{ form.trans_date }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="amount" class="form-label">Nature</label>
+                        {{ form.nature }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sms_count" class="form-label">Header</label>
+                        {{ form.header }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="status" class="form-label">to_scrubber</label>
+                        {{ form.to_scrubber }}
+                    </div>
+                    <div class="col-md-6">
+                    <label for="recharge_date" class="form-label">scrubb_success</label>
+                    {{ form.scrubb_success }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="status" class="form-label">to_telco</label>
+                        {{ form.to_telco }}
+                    </div>
+                    <div class="col-md-6">
+                    <label for="recharge_date" class="form-label">telco_success</label>
+                    {{ form.telco_success }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="status" class="form-label">to_telco_onnet</label>
+                        {{ form.to_telco_onnet }}
+                    </div>
+                    <div class="col-md-6">
+                    <label for="recharge_date" class="form-label">telco_onnet_success</label>
+                    {{ form.telco_onnet_success }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="status" class="form-label">to_telco_offnet</label>
+                        {{ form.to_telco_offnet }}
+                    </div>
+                    <div class="col-md-6">
+                    <label for="recharge_date" class="form-label">telco_offnet_success</label>
+                    {{ form.telco_offnet_success }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <label for="status" class="form-label">dlr_waiting</label>
+                        {{ form.dlr_waiting }}
+                    </div>
+                    <div class="col-md-6">
+                    <label for="recharge_date" class="form-label">dlr_expire</label>
+                    {{ form.dlr_expire }}
+                    </div>
+                </div>
+                <button class="btn btn-primary d-grid" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+          <div class="card mb-4">
+              <h5 class="card-header">Upload Transactions</h5>
+              <div class="card-body">
+                <div class="d-flex align-items-start align-items-sm-center gap-4">
+                  <form action="{% url 'upload_trans' %}" method="POST" enctype="multipart/form-data">  
+                      {% csrf_token %}
+                      <div class="button-wrapper">
+                        <label for="upload" class="btn btn-primary mb-4" tabindex="0">
+                          <i class="bx bx-upload d-block d-sm-none"></i>
+                          <input
+                            type="file"
+                            name="my_file" 
+                            id="upload"
+                            class="account-file-input"
+                            accept=".xlsx, .xls, .csv"
+                          />
+                        </label>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Upload</button>
+                  </form>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+</div>
+
+{% endblock content %}

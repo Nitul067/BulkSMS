@@ -12,7 +12,7 @@ class CustomTransaction(admin.ModelAdmin):
                     "scrubb_success", "to_telco", "telco_success", "to_telco_onnet", 
                     "telco_onnet_success", "to_telco_offnet", "telco_offnet_success", 
                     "dlr_waiting", "dlr_expire")
-    ordering = ("id",)
+    ordering = ("-id",)
     list_per_page = 50
 
 

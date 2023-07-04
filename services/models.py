@@ -21,10 +21,21 @@ class Recharge(models.Model):
 
 
 class Transaction(models.Model):
+    NATURE_CHOICES = (
+        ('Promo', 'Promo'),
+        ('Trans', 'Trans'),
+    )
+    HEADER_CHOICES = (
+        ('Government', 'Government'),
+        ('PSU', 'PSU'),
+        ('Regular', 'Regular'),
+        ('TRAI Exempted', 'TRAI Exempted'),
+    )
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
     trans_date = models.DateField()
-    nature = models.CharField(max_length=20)
-    header = models.CharField(max_length=50)
+    nature = models.CharField(max_length=20, choices=NATURE_CHOICES, default='Trans')
+    header = models.CharField(max_length=50, choices=HEADER_CHOICES, default='Regular')
     to_scrubber = models.IntegerField()
     scrubb_success = models.IntegerField()
     to_telco = models.IntegerField()
@@ -41,7 +52,7 @@ class Transaction(models.Model):
 
 
 class Tariff(models.Model):
-    plan = models.CharField(max_length=20)
+    plan = models.CharField(max_length=20, default="1000000")
     value = models.IntegerField()
     sms_count = models.IntegerField()
     validity= models.IntegerField()

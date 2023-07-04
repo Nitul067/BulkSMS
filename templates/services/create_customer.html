@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{% url 'create_customer' %}" method="POST" enctype="multipart/form-data">  
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Last Name</label>
+                        {{ form.last_name }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Username</label>
+                        {{ form.username }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">System_id</label>
+                        <input type="text" class="form-control" id="system_id" name="system_id" placeholder="System_id" required/>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Phone Number</label>
+                        {{ form.phone_number }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="input-group input-group-merge">
+                            {{ form.password }}
+                            <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="password">Confirm Password</label>
+                        <div class="input-group input-group-merge">
+                            {{ form.confirm_password }}
+                            <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <ul class="errorlist">
+                        {% for field in form %}
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                    <li style="color: red;">{{error}}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if form.non_field_errors %}
+                            <li style="color: red;">{{form.non_field_errors}}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <button class="btn btn-primary d-grid" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
