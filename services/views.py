@@ -7,7 +7,7 @@ import os
 
 from accounts.models import User, UserProfile
 from accounts.forms import UserForm
-from .models import Transaction, Recharge, Tariff
+from .models import Transaction, Recharge, Message, Tariff
 from .forms import RechargeForm, TransactionForm
 
 
@@ -18,38 +18,53 @@ def ao_dash(request):
     for user in users:
         if user.profile.system_id:
             total_values[user.profile.system_id] = {}
-            transactions = Transaction.objects.filter(user=user)
+            recharge = Recharge.objects.filter(user=user).last()
+            message = Message.objects.filter(user=user).last()
+            total_values[user.profile.system_id]["amount"] = recharge.amount
+            total_values[user.profile.system_id]["total_sms"] = recharge.sms_count
+            total_values[user.profile.system_id]["recharge_date"] = recharge.recharge_date
+            total_values[user.profile.system_id]["expiry_date"] = recharge.expiry_date
+            total_values[user.profile.system_id]["used_sms"] = message.cur_used_sms
+            total_values[user.profile.system_id]["failed_sms"] = message.cur_failed_sms
+            total_values[user.profile.system_id]["forwarded_sms"] = message.forwarded_sms
+            total_values[user.profile.system_id]["remaining_sms"] = recharge.sms_count - message.cur_used_sms
             
-            total_values[user.profile.system_id]["to_scrubber"] = transactions.aggregate(Sum("to_scrubber"))["to_scrubber__sum"]
-            total_values[user.profile.system_id]["scrubb_success"] = transactions.aggregate(Sum("scrubb_success"))["scrubb_success__sum"]
-            total_values[user.profile.system_id]["to_telco"] = transactions.aggregate(Sum("to_telco"))["to_telco__sum"]
-            total_values[user.profile.system_id]["telco_success"] = transactions.aggregate(Sum("telco_success"))["telco_success__sum"]
-            total_values[user.profile.system_id]["to_telco_onnet"] = transactions.aggregate(Sum("to_telco_onnet"))["to_telco_onnet__sum"]
-            total_values[user.profile.system_id]["telco_onnet_success"] = transactions.aggregate(Sum("telco_onnet_success"))["telco_onnet_success__sum"]
-            total_values[user.profile.system_id]["to_telco_offnet"] = transactions.aggregate(Sum("to_telco_offnet"))["to_telco_offnet__sum"]
-            total_values[user.profile.system_id]["telco_offnet_success"] = transactions.aggregate(Sum("telco_offnet_success"))["telco_offnet_success__sum"]
-            total_values[user.profile.system_id]["dlr_waiting"] = transactions.aggregate(Sum("dlr_waiting"))["dlr_waiting__sum"]
-            total_values[user.profile.system_id]["dlr_expire"] = transactions.aggregate(Sum("dlr_expire"))["dlr_expire__sum"]
     
-    for user in users:
-        if user.profile.system_id:
-            try:
-                total_values[user.profile.system_id]["scrubb_fail"] = total_values[user.profile.system_id]["to_scrubber"] - total_values[user.profile.system_id]["scrubb_success"]
-                total_values[user.profile.system_id]["telco_fail"] = total_values[user.profile.system_id]["to_telco"] - total_values[user.profile.system_id]["telco_success"]
-            except:
-                total_values[user.profile.system_id]["scrubb_fail"] = None
-                total_values[user.profile.system_id]["telco_fail"] = None
-            try:
-                recharge = Recharge.objects.filter(user=user).last()
-                total_values[user.profile.system_id]["amount"] = recharge.amount
-                total_values[user.profile.system_id]["sms"] = recharge.sms_count
-                total_values[user.profile.system_id]["recharge_date"] = recharge.recharge_date
-                total_values[user.profile.system_id]["expiry_date"] = recharge.expiry_date
-            except:
-                total_values[user.profile.system_id]["amount"] = None
-                total_values[user.profile.system_id]["sms"] = None
-                total_values[user.profile.system_id]["recharge_date"] = None
-                total_values[user.profile.system_id]["expiry_date"] = None
+    # for user in users:
+    #     if user.profile.system_id:
+    #         total_values[user.profile.system_id] = {}
+    #         transactions = Transaction.objects.filter(user=user)
+            
+    #         total_values[user.profile.system_id]["to_scrubber"] = transactions.aggregate(Sum("to_scrubber"))["to_scrubber__sum"]
+    #         total_values[user.profile.system_id]["scrubb_success"] = transactions.aggregate(Sum("scrubb_success"))["scrubb_success__sum"]
+    #         total_values[user.profile.system_id]["to_telco"] = transactions.aggregate(Sum("to_telco"))["to_telco__sum"]
+    #         total_values[user.profile.system_id]["telco_success"] = transactions.aggregate(Sum("telco_success"))["telco_success__sum"]
+    #         total_values[user.profile.system_id]["to_telco_onnet"] = transactions.aggregate(Sum("to_telco_onnet"))["to_telco_onnet__sum"]
+    #         total_values[user.profile.system_id]["telco_onnet_success"] = transactions.aggregate(Sum("telco_onnet_success"))["telco_onnet_success__sum"]
+    #         total_values[user.profile.system_id]["to_telco_offnet"] = transactions.aggregate(Sum("to_telco_offnet"))["to_telco_offnet__sum"]
+    #         total_values[user.profile.system_id]["telco_offnet_success"] = transactions.aggregate(Sum("telco_offnet_success"))["telco_offnet_success__sum"]
+    #         total_values[user.profile.system_id]["dlr_waiting"] = transactions.aggregate(Sum("dlr_waiting"))["dlr_waiting__sum"]
+    #         total_values[user.profile.system_id]["dlr_expire"] = transactions.aggregate(Sum("dlr_expire"))["dlr_expire__sum"]
+    
+    # for user in users:
+    #     if user.profile.system_id:
+    #         try:
+    #             total_values[user.profile.system_id]["scrubb_fail"] = total_values[user.profile.system_id]["to_scrubber"] - total_values[user.profile.system_id]["scrubb_success"]
+    #             total_values[user.profile.system_id]["telco_fail"] = total_values[user.profile.system_id]["to_telco"] - total_values[user.profile.system_id]["telco_success"]
+    #         except:
+    #             total_values[user.profile.system_id]["scrubb_fail"] = None
+    #             total_values[user.profile.system_id]["telco_fail"] = None
+    #         try:
+    #             recharge = Recharge.objects.filter(user=user).last()
+    #             total_values[user.profile.system_id]["amount"] = recharge.amount
+    #             total_values[user.profile.system_id]["sms"] = recharge.sms_count
+    #             total_values[user.profile.system_id]["recharge_date"] = recharge.recharge_date
+    #             total_values[user.profile.system_id]["expiry_date"] = recharge.expiry_date
+    #         except:
+    #             total_values[user.profile.system_id]["amount"] = None
+    #             total_values[user.profile.system_id]["sms"] = None
+    #             total_values[user.profile.system_id]["recharge_date"] = None
+    #             total_values[user.profile.system_id]["expiry_date"] = None
                 
     context = {
         "total_values": total_values,
@@ -110,6 +125,33 @@ def add_recharge(request):
             recharge.user = user
             recharge.save()
             messages.success(request, 'Recharge details added sucessfully!')
+            
+            recharge = Recharge.objects.filter(user=user)
+            
+            if len(recharge) < 2:
+                sms = Message.objects.create(
+                    user = user,
+                    pre_total_sms = 0,
+                    pre_used_sms = 0,
+                    pre_failed_sms = 0,
+                    forwarded_sms = 0,
+                    cur_total_sms = recharge.last().sms_count,
+                    cur_used_sms = 0,
+                    cur_failed_sms = 0
+                )
+                sms.save()
+            else:
+                sms = Message.objects.get(user=user)
+                sms.pre_total_sms = sms.cur_total_sms
+                sms.pre_used_sms = sms.cur_used_sms
+                sms.pre_failed_sms = sms.cur_failed_sms
+                if recharge.last().recharge_date < recharge[-2].expiry_date:
+                    sms.forwarded_sms = sms.cur_total_sms - sms.cur_used_sms
+                sms.cur_total_sms = recharge.last().sms_count
+                sms.cur_used_sms = 0
+                sms.cur_failed_sms = 0
+                sms.save()
+            
             return redirect("add_recharge")
         else:
             print(form.errors)
@@ -166,6 +208,26 @@ def add_transaction(request):
             transaction.user = user
             transaction.save()
             messages.success(request, 'Transaction details added sucessfully!')
+            
+            sms = Message.objects.get(user=user)
+            failed_sms = (transaction.to_scrubber - transaction.scrubb_success) + (transaction.to_telco - transaction.telco_success)
+            sms.cur_used_sms += transaction.to_scrubber
+            sms.cur_failed_sms += failed_sms
+            
+            if (sms.forwarded_sms != 0) and (sms.cur_used_sms >= sms.forwarded_sms):
+                diff_sms = sms.cur_used_sms - sms.forwarded_sms
+                total_failed_sms = sms.pre_failed_sms + sms.cur_failed_sms
+                failed_submission = round((total_failed_sms / sms.pre_total_sms) * 100, 2)
+                if failed_submission > 15:
+                    sms.rollback_sms = round(((failed_submission - 15) / 100) * sms.pre_total_sms)
+                    sms.cur_total_sms += sms.rollback_sms
+                sms.cur_used_sms = diff_sms
+                sms.pre_used_sms += sms.forwarded_sms
+                sms.pre_failed_sms = total_failed_sms
+                sms.cur_failed_sms = 0
+                sms.forwarded_sms = 0
+            sms.save()
+            
             return redirect("add_trans")
         else:
             messages.error(request, form.errors)

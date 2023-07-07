@@ -2,6 +2,21 @@ from django.db import models
 from accounts.models import User
 
 
+class Amount(models.Model):
+    value = models.IntegerField()
+    
+    def __str__(self) -> str:
+        return self.value
+
+
+class SMSCount(models.Model):
+    amount = models.ForeignKey(Amount, on_delete=models.CASCADE)
+    sms_count = models.IntegerField()
+    
+    def __str__(self) -> str:
+        return self.value
+
+
 class Recharge(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
@@ -50,6 +65,21 @@ class Transaction(models.Model):
     def __str__(self) -> str:
         return self.user.profile.system_id
 
+
+class Message(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='messages')
+    pre_total_sms = models.IntegerField()
+    pre_used_sms = models.IntegerField()
+    pre_failed_sms = models.IntegerField()
+    forwarded_sms = models.IntegerField(default=0)
+    cur_total_sms = models.IntegerField()
+    cur_used_sms = models.IntegerField()
+    cur_failed_sms = models.IntegerField()
+    rollback_sms = models.IntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return self.user.profile.system_id
+    
 
 class Tariff(models.Model):
     plan = models.CharField(max_length=20, default="1000000")
