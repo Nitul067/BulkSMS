@@ -89,6 +89,7 @@ class UserProfile(models.Model):
     user = OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True, related_name="profile")
     profile_picture = models.ImageField(upload_to="users/profile_pictures", blank=True, null=True)
     system_id = models.CharField(max_length=50, blank=True, null=True)
+    rollback_pct = models.IntegerField(default=16)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 

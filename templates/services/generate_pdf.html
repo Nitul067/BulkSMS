@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rollback PDF</title>
+
+    <style>  
+        body {
+            position: relative;
+            margin: 0 auto; 
+            color: #001028;
+            background: #FFFFFF; 
+            font-size: 14px; 
+            line-height: 50%;
+        }
+        .table th,
+        .table td {
+            text-align: left;
+        }
+        .table {
+            padding: 2px;
+        }
+        .table tr {
+            border-bottom: 1px solid black;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        <h6>A O CMTS,</h6>
+                        <p>BKT Telephone Exchange,</p>
+                        <p>Rajkot - 360 001</p>
+                        <p>Email: {{ email }}</p>
+                    </td>
+                    <td>
+                        <img src="D:\NVR\Python\BSNL Projects\bulksms\bulksms\bulksms\static\img\pdf\logo.jpg" width="400px" alt="bsnl_logo">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <table>
+            <tbody>
+                <tr>
+                    <td colspan="4">
+                        <h6>No:- RJ/AO CMTS/Free SMS/{{ rollback.user.profile.system_id }}/{% now "Y" %}/{{ rollback.id }}</h6>
+                    </td>
+                    <td>
+                        <h6>Date:- {% now "d-m-Y" %}</h6>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <br>
+
+        <h6>To</h6>
+        <h5>SMSC Pune</h5>
+        <p><strong>Sub:-</strong> Issue free SMS count against failed SMS to Bulk SMS customer as per agreement with customer.</p>
+        <br>
+
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        
+                    </td>
+                    <td colspan="4">
+                        <p>You are requested to issue free SMS against failed SMS to Bulk customer as per agreement </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <p><p>with customer. Details as provided below.</p></p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+
+        <table class="table">
+            <tbody>
+              <tr>
+                <th scope="row">Customer ID</th>
+                <td>{{ rollback.user.profile.system_id }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Customer Name</th>
+                <td>{{ rollback.user.first_name }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Period</th>
+                <td>{{ rollback.rb_from_date }} to {{ rollback.rollback_date }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Total used SMS</th>
+                <td>{{ rollback.used_sms }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Total failed SMS</th>
+                <td>{{ rollback.failed_sms }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Total failed SMS in %</th>
+                <td>{{ rollback.failed_sms_pct }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Failed SMS Threshold in %</th>
+                <td>{{ rollback.user.profile.rollback_pct }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Rollback SMS</th>
+                <td ><strong>{{ rollback.rollback_sms }}</strong></td>
+              </tr>
+            </tbody>
+        </table>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+
+        <h6>AO CMTS</h6>
+        <h6>O/o GMTD Rajkot/Gujarat</h6>
+    </div>
+</body>
+</html>

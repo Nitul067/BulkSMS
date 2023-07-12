@@ -19,22 +19,26 @@
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Username</label>
-                        {{ form.username }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">System_id</label>
-                        <input type="text" class="form-control" id="system_id" name="system_id" placeholder="System_id" required/>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-3">
                         <label class="form-label">Phone Number</label>
                         {{ form.phone_number }}
                     </div>
                     <div class="col-md-6">
                         <label for="email" class="form-label">Email</label>
                         {{ form.email }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Username</label>
+                        {{ form.username }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">System_id</label>
+                        <input type="text" class="form-control" id="system_id" name="system_id" placeholder="System_id" required/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Rollback Percentage</label>
+                        <input type="text" class="form-control" id="rollback_pct" name="rollback_pct" placeholder="Rollback_pct" required/>
                     </div>
                 </div>
                 <div class="row mb-3">

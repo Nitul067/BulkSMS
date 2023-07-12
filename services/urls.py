@@ -9,4 +9,8 @@ urlpatterns = [
     path("recharge/<int:id>/update/", views.update_recharge, name="update_recharge"),
     path("upload_trans/", views.upload_transactions, name="upload_trans"),
     path("add_trans/", views.add_transaction, name="add_trans"),
+    path("rollback/<int:id>/<int:save>/", views.rollback, name="rollback"),
+    
+    path("rollback/<int:id>/pdf/", views.generate_pdf, name="generate_pdf"),
+    path("ajax/get_sms", views.ajax_sms_data, name="ajax_sms_data"),
 ]

@@ -38,9 +38,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_apscheduler",
     
     "accounts",
     "services",
+    "scheduler",
 ]
 
 MIDDLEWARE = [
@@ -85,6 +87,10 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# Scheduler config
+
+SCHEDULER_AUTOSTART = True
 
 
 # Password validation

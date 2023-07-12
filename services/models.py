@@ -2,21 +2,6 @@ from django.db import models
 from accounts.models import User
 
 
-class Amount(models.Model):
-    value = models.IntegerField()
-    
-    def __str__(self) -> str:
-        return self.value
-
-
-class SMSCount(models.Model):
-    amount = models.ForeignKey(Amount, on_delete=models.CASCADE)
-    sms_count = models.IntegerField()
-    
-    def __str__(self) -> str:
-        return self.value
-
-
 class Recharge(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
@@ -76,6 +61,19 @@ class Message(models.Model):
     cur_used_sms = models.IntegerField()
     cur_failed_sms = models.IntegerField()
     rollback_sms = models.IntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return self.user.profile.system_id
+
+
+class Rollback(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rollbacks')
+    used_sms = models.IntegerField()
+    failed_sms = models.IntegerField()
+    failed_sms_pct = models.FloatField(blank=True, null=True)
+    rollback_sms = models.IntegerField()
+    rb_from_date = models.DateField(blank=True, null=True)
+    rollback_date = models.DateField(auto_now_add=True)
     
     def __str__(self) -> str:
         return self.user.profile.system_id

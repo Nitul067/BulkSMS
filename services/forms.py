@@ -1,17 +1,28 @@
 from django import forms
-from .models import Recharge, Transaction
+from .models import Recharge, Transaction, Tariff
+
+
+tariff = Tariff.objects.all()
+amount_list = [("", "Select Amount")]
+for row in tariff:
+    if (row.value, row.value) not in amount_list:
+        amount_list.append((row.value, row.value))
 
 
 class RechargeForm(forms.ModelForm):
+    AMOUNT_CHOICES = tuple(amount_list)
+    SMS_COUNT_CHOICES = (
+        ("", "Select SMS_Count"),
+    )
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('Completed', 'Completed'),
         ('Failed', 'Failed'),
     )
     
-    amount = forms.FloatField(widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Amount"}))
-    sms_count = forms.IntegerField(widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "No. of SMS"}))
-    status = forms.CharField(widget=forms.Select(choices=STATUS_CHOICES, attrs={"class": "form-select"}))
+    amount = forms.FloatField(widget=forms.Select(choices=AMOUNT_CHOICES, attrs={"id": "amount", "class": "form-select"}))
+    sms_count = forms.IntegerField(widget=forms.Select(choices=SMS_COUNT_CHOICES, attrs={"id": "sms_count", "class": "form-select"}))
+    status = forms.CharField(widget=forms.Select(choices=STATUS_CHOICES, attrs={"class": "form-select"}), initial="Completed")
     recharge_date = forms.DateField(widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
     
     class Meta:

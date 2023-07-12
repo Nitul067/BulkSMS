@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.template.loader import get_template
 from django.contrib import messages
 from django.db.models import Sum
 from tablib import Dataset
+from xhtml2pdf import pisa
 import datetime as dt
 import os
 
 from accounts.models import User, UserProfile
 from accounts.forms import UserForm
-from .models import Transaction, Recharge, Message, Tariff
+from .models import Transaction, Recharge, Message, Rollback, Tariff
 from .forms import RechargeForm, TransactionForm
+from .utils import link_callback
 
 
 def ao_dash(request):
@@ -20,14 +24,25 @@ def ao_dash(request):
             total_values[user.profile.system_id] = {}
             recharge = Recharge.objects.filter(user=user).last()
             message = Message.objects.filter(user=user).last()
-            total_values[user.profile.system_id]["amount"] = recharge.amount
-            total_values[user.profile.system_id]["total_sms"] = recharge.sms_count
-            total_values[user.profile.system_id]["recharge_date"] = recharge.recharge_date
-            total_values[user.profile.system_id]["expiry_date"] = recharge.expiry_date
-            total_values[user.profile.system_id]["used_sms"] = message.cur_used_sms
-            total_values[user.profile.system_id]["failed_sms"] = message.cur_failed_sms
-            total_values[user.profile.system_id]["forwarded_sms"] = message.forwarded_sms
-            total_values[user.profile.system_id]["remaining_sms"] = recharge.sms_count - message.cur_used_sms
+            try:
+                total_values[user.profile.system_id]["id"] = user.id
+                total_values[user.profile.system_id]["amount"] = recharge.amount
+                total_values[user.profile.system_id]["total_sms"] = recharge.sms_count
+                total_values[user.profile.system_id]["recharge_date"] = recharge.recharge_date
+                total_values[user.profile.system_id]["expiry_date"] = recharge.expiry_date
+                total_values[user.profile.system_id]["used_sms"] = message.cur_used_sms
+                total_values[user.profile.system_id]["failed_sms"] = message.cur_failed_sms
+                total_values[user.profile.system_id]["forwarded_sms"] = message.forwarded_sms
+                total_values[user.profile.system_id]["remaining_sms"] = recharge.sms_count - message.cur_used_sms
+            except:
+                total_values[user.profile.system_id]["amount"] = None
+                total_values[user.profile.system_id]["total_sms"] = None
+                total_values[user.profile.system_id]["recharge_date"] = None
+                total_values[user.profile.system_id]["expiry_date"] = None
+                total_values[user.profile.system_id]["used_sms"] = None
+                total_values[user.profile.system_id]["failed_sms"] = None
+                total_values[user.profile.system_id]["forwarded_sms"] = None
+                total_values[user.profile.system_id]["remaining_sms"] = None
             
     
     # for user in users:
@@ -94,8 +109,10 @@ def create_customer(request):
             user.save()
             
             system_id = request.POST["system_id"]
+            rollback_pct = request.POST["rollback_pct"]
             profile = UserProfile.objects.get(user=user)
             profile.system_id = system_id
+            profile.rollback_pct = rollback_pct
             profile.save()
             
             messages.success(request, "Customer has been created sucessfully!")
@@ -123,6 +140,10 @@ def add_recharge(request):
         if form.is_valid():
             recharge = form.save(commit=False)
             recharge.user = user
+            if recharge.status == "Completed":
+                tariff = Tariff.objects.filter(value=recharge.amount, sms_count=recharge.sms_count).first()
+                recharge.expiry_date = recharge.recharge_date + dt.timedelta(tariff.validity)
+                recharge.save()
             recharge.save()
             messages.success(request, 'Recharge details added sucessfully!')
             
@@ -145,7 +166,7 @@ def add_recharge(request):
                 sms.pre_total_sms = sms.cur_total_sms
                 sms.pre_used_sms = sms.cur_used_sms
                 sms.pre_failed_sms = sms.cur_failed_sms
-                if recharge.last().recharge_date < recharge[-2].expiry_date:
+                if recharge.last().recharge_date <= recharge[len(recharge)-1].expiry_date:
                     sms.forwarded_sms = sms.cur_total_sms - sms.cur_used_sms
                 sms.cur_total_sms = recharge.last().sms_count
                 sms.cur_used_sms = 0
@@ -210,22 +231,22 @@ def add_transaction(request):
             messages.success(request, 'Transaction details added sucessfully!')
             
             sms = Message.objects.get(user=user)
-            failed_sms = (transaction.to_scrubber - transaction.scrubb_success) + (transaction.to_telco - transaction.telco_success)
+            failed_sms = transaction.to_scrubber - transaction.telco_success
             sms.cur_used_sms += transaction.to_scrubber
             sms.cur_failed_sms += failed_sms
             
-            if (sms.forwarded_sms != 0) and (sms.cur_used_sms >= sms.forwarded_sms):
-                diff_sms = sms.cur_used_sms - sms.forwarded_sms
-                total_failed_sms = sms.pre_failed_sms + sms.cur_failed_sms
-                failed_submission = round((total_failed_sms / sms.pre_total_sms) * 100, 2)
-                if failed_submission > 15:
-                    sms.rollback_sms = round(((failed_submission - 15) / 100) * sms.pre_total_sms)
-                    sms.cur_total_sms += sms.rollback_sms
-                sms.cur_used_sms = diff_sms
-                sms.pre_used_sms += sms.forwarded_sms
-                sms.pre_failed_sms = total_failed_sms
-                sms.cur_failed_sms = 0
-                sms.forwarded_sms = 0
+            # if (sms.forwarded_sms != 0) and (sms.cur_used_sms >= sms.forwarded_sms):
+            #     diff_sms = sms.cur_used_sms - sms.forwarded_sms
+            #     total_failed_sms = sms.pre_failed_sms + sms.cur_failed_sms
+            #     failed_submission = round((total_failed_sms / sms.pre_total_sms) * 100, 2)
+            #     if failed_submission > 15:
+            #         sms.rollback_sms = round(((failed_submission - 15) / 100) * sms.pre_total_sms)
+            #         sms.cur_total_sms += sms.rollback_sms
+            #     sms.cur_used_sms = diff_sms
+            #     sms.pre_used_sms += sms.forwarded_sms
+            #     sms.pre_failed_sms = total_failed_sms
+            #     sms.cur_failed_sms = 0
+            #     sms.forwarded_sms = 0
             sms.save()
             
             return redirect("add_trans")
@@ -272,4 +293,105 @@ def upload_transactions(request):
         return redirect("ao_dash")
     else:
         return render(request, "errors/404.html")
+
+
+def rollback(request, id, save):
+    user = User.objects.get(id=id)
+    rb = Rollback.objects.filter(user=user).last()
+    
+    if rb:
+        transactions = Transaction.objects.filter(user=user, trans_date__gt=rb.rollback_date)
+    else:
+        transactions = Transaction.objects.filter(user=user)
+        
+    if transactions:
+        used_sms = transactions.aggregate(Sum("to_scrubber"))["to_scrubber__sum"]
+        failed_sms = used_sms - transactions.aggregate(Sum("telco_success"))["telco_success__sum"]
+        failed_pct = round((failed_sms / used_sms) * 100, 2)
+        rb_pct_limit = user.profile.rollback_pct
+        if failed_pct > rb_pct_limit:
+            rollback_sms = round((failed_pct - rb_pct_limit) * used_sms / 100)
+        else:
+            rollback_sms = 0
+        
+        new_rb = None
+        if save:
+            new_rb = Rollback.objects.create(
+                user=user,
+                used_sms=used_sms,
+                failed_sms_pct=failed_pct,
+                failed_sms=failed_sms,
+                rb_from_date = transactions.last().trans_date,
+                rollback_sms=rollback_sms,
+            )
+            new_rb.save()
+        
+        context = {
+            "user_info": user,
+            "rb_id": new_rb.id if new_rb else 0,
+            "msg": "Rollback SMS Summary",
+            "from_date": transactions.last().trans_date,
+            "to_date": dt.date.today(),
+            "used_sms": used_sms,
+            "failed_sms": failed_sms,
+            "failed_pct": failed_pct,
+            "rb_pct_limit": rb_pct_limit,
+            "rollback_sms": rollback_sms
+        }
+    else:
+        rb = Rollback.objects.filter(user=user).last()
+        context = {
+            "user_info": user,
+            "rb_id": rb.id,
+            "error": "No transaction found for this period.",
+            "from_date": rb.rb_from_date,
+            "to_date": dt.date.today(),
+            "used_sms": rb.used_sms,
+            "failed_sms": rb.failed_sms,
+            "failed_pct": rb.failed_sms_pct,
+            "rb_pct_limit": user.profile.rollback_pct,
+            "rollback_sms": rb.rollback_sms
+        }
+    return render(request, "services/rollback.html", context)
+
+
+def generate_pdf(request, id):
+    rb = Rollback.objects.get(id=id)
+    
+    template_path = "services/generate_pdf.html"
+    context = {
+        "email": request.user,
+        "rollback": rb,
+    }
+     
+    # Create a Django response object, and specify content_type as pdf
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="rollback_{rb.user.profile.system_id}-{rb.id}.pdf"'
+    
+    # find the template and render it.
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # create a pdf
+    pisa_status = pisa.CreatePDF(
+       html, dest=response, link_callback=link_callback)
+    # if error then show some funny view
+    if pisa_status.err:
+       return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
+
+
+def ajax_sms_data(request):
+    amount = request.GET.get('amount')
+    if amount:
+        tariff = Tariff.objects.filter(value=amount)
+        sms_count = list(tariff.values_list("sms_count", flat=True))
+        context = {
+            "sms_count": sms_count
+        }
+    else:
+        context = {
+            "sms_count": None
+        }
+    return render(request, "services/sms_count_dropdown.html", context)
 

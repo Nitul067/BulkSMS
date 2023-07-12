@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static %}
 
 {% block content %}
 
@@ -124,5 +124,19 @@
         </div>
     </div>
 </div>
+
+<script>
+  $("#amount").change(function(){
+    $.ajax({                       
+      url: "{% url 'ajax_sms_data' %}",                    
+      data: {
+          'amount': $("#amount").val()      
+      },
+      success: function (data) {
+        $("#sms_count").html(data); 
+      }
+    });
+  })
+</script>
 
 {% endblock content %}
