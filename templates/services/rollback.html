@@ -54,7 +54,7 @@
                 {% if rb_id %}
                 <a href="{% url 'generate_pdf' id=rb_id %}" class="btn btn-sm btn-outline-primary">Download PDF</a>
                 {% else %}
-                <a href="{% url 'rollback' id=user_info.id save=1 %}" class="btn btn-sm btn-outline-primary">Confirm Rollback</a>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#rollbackModal">Confirm Rollback</button>
                 {% endif %}
               </div>
             </div>
@@ -71,7 +71,97 @@
             </div>
           </div>
         </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col mb-4 mb-md-0">
+      <div class="accordion mt-3" id="accordionExample">
+        <div class="card accordion-item">
+          <h2 class="accordion-header" id="headingTwo">
+            <button
+              type="button"
+              class="accordion-button collapsed"
+              data-bs-toggle="collapse"
+              data-bs-target="#accordionTwo"
+              aria-expanded="false"
+              aria-controls="accordionTwo"
+            >
+              Rollback SMS History
+            </button>
+          </h2>
+          <div
+            id="accordionTwo"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingTwo"
+            data-bs-parent="#accordionExample"
+          >
+            <div class="accordion-body my-3">
+              {% if rollbacks %}
+              <div class="table-responsive text-nowrap text-center">
+                <table class="table table-sm table-bordered">
+                  <thead>
+                    <tr>
+                      <th>System ID</th>
+                      <th>Period</th>
+                      <th>Total Failed SMS in %</th>
+                      <th>Failed SMS Threshold in %</th>
+                      <th>Rollback SMS</th>
+                      <th>Download PDF</th>
+                    </tr>
+                  </thead>
+                  <tbody class="table-border-bottom-0">
+                    {% for rollback in rollbacks %}
+                      <tr>
+                        <td>{{ rollback.user.profile.system_id }}</a></td>
+                        <td>{{ rollback.rb_from_date }} to {{ rollback.rollback_date }}</td>
+                        <td>{{ rollback.failed_sms_pct }}</td>
+                        <td>{{ rollback.user.profile.rollback_pct }}</td>
+                        <td>{{ rollback.rollback_sms }}</td>
+                        <td><a href="{% url 'generate_pdf' id=rollback.id %}"><span class="tf-icons bx bx-download"></span></a></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <h6>No rollback history found.</h6>
+              {% endif %}
+              </div>
+            </div>
+        </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="rollbackModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel1">Rollback SMS</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col mb-3">
+            <h6>Are you sure, you want to save rollback SMS details?</h6>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <a href="{% url 'rollback' id=user_info.id save=1 %}" class="btn btn-primary">Save changes</a>
+      </div>
+    </div>
   </div>
 </div>
 

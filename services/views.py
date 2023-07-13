@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum
 from tablib import Dataset
 from xhtml2pdf import pisa
@@ -15,6 +16,7 @@ from .forms import RechargeForm, TransactionForm
 from .utils import link_callback
 
 
+@login_required(login_url="login")
 def ao_dash(request):
     users = User.objects.all()
     
@@ -87,36 +89,42 @@ def ao_dash(request):
     return render(request, "services/ao_dash.html", context)
 
 
+@login_required(login_url="login")
 def create_customer(request):
     if request.method == "POST":
         form = UserForm(request.POST)
         if form.is_valid():
-            first_name = form.cleaned_data["first_name"]
-            last_name = form.cleaned_data["last_name"]
-            username = form.cleaned_data["username"]
-            email = form.cleaned_data["email"]
-            phone_number = form.cleaned_data["phone_number"]
-            password = form.cleaned_data["password"]
-            user = User.objects.create_user(
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-                email=email,
-                phone_number=phone_number,
-                password=password,
-            )
-            user.is_active = True
-            user.save()
-            
             system_id = request.POST["system_id"]
             rollback_pct = request.POST["rollback_pct"]
-            profile = UserProfile.objects.get(user=user)
-            profile.system_id = system_id
-            profile.rollback_pct = rollback_pct
-            profile.save()
-            
-            messages.success(request, "Customer has been created sucessfully!")
-            return redirect("ao_dash")
+            system_ids = UserProfile.objects.all().values_list("system_id")
+
+            if (system_id, ) in list(system_ids):
+                messages.info(request, "Customer already exist!")
+            else:    
+                first_name = form.cleaned_data["first_name"]
+                last_name = form.cleaned_data["last_name"]
+                username = form.cleaned_data["username"]
+                email = form.cleaned_data["email"]
+                phone_number = form.cleaned_data["phone_number"]
+                password = form.cleaned_data["password"]
+                user = User.objects.create_user(
+                    first_name=first_name,
+                    last_name=last_name,
+                    username=username,
+                    email=email,
+                    phone_number=phone_number,
+                    password=password,
+                )
+                user.is_active = True
+                user.save()
+                
+                profile = UserProfile.objects.get(user=user)
+                profile.system_id = system_id
+                profile.rollback_pct = rollback_pct
+                profile.save()
+                
+                messages.success(request, "Customer has been created sucessfully!")
+                return redirect("ao_dash")
         else:
             print(form.errors)
     else:
@@ -128,6 +136,7 @@ def create_customer(request):
     return render(request, "services/create_customer.html", context)
 
 
+@login_required(login_url="login")
 def add_recharge(request):
     user_profile = UserProfile.objects.all()
     pending_recharge = Recharge.objects.exclude(status="Completed")
@@ -186,6 +195,7 @@ def add_recharge(request):
     return render(request, "services/recharge.html", context)
 
 
+@login_required(login_url="login")
 def update_recharge(request, id):
     recharge = Recharge.objects.get(id=id)
     pending_recharge = Recharge.objects.exclude(status="Completed")
@@ -216,6 +226,7 @@ def update_recharge(request, id):
     return render(request, "services/update_recharge.html", context)
 
 
+@login_required(login_url="login")
 def add_transaction(request):
     user_profile = UserProfile.objects.all()
     
@@ -262,6 +273,7 @@ def add_transaction(request):
     return render(request, "services/add_transaction.html", context)
 
 
+@login_required(login_url="login")
 def upload_transactions(request):
     if request.method == "POST":
         dataset = Dataset()
@@ -289,15 +301,24 @@ def upload_transactions(request):
                 dlr_expire = data[17] if data[17] else 0,
             )
             trans.save()
+            
+            sms = Message.objects.get(user=trans.user)
+            failed_sms = trans.to_scrubber - trans.telco_success
+            sms.cur_used_sms += trans.to_scrubber
+            sms.cur_failed_sms += failed_sms
+            sms.save()
+            
         messages.success(request, 'Database has been updated sucessfully!')
         return redirect("ao_dash")
     else:
         return render(request, "errors/404.html")
 
 
+@login_required(login_url="login")
 def rollback(request, id, save):
     user = User.objects.get(id=id)
-    rb = Rollback.objects.filter(user=user).last()
+    rollbacks = Rollback.objects.filter(user=user)
+    rb = rollbacks.last()
     
     if rb:
         transactions = Transaction.objects.filter(user=user, trans_date__gt=rb.rollback_date)
@@ -307,7 +328,7 @@ def rollback(request, id, save):
     if transactions:
         used_sms = transactions.aggregate(Sum("to_scrubber"))["to_scrubber__sum"]
         failed_sms = used_sms - transactions.aggregate(Sum("telco_success"))["telco_success__sum"]
-        failed_pct = round((failed_sms / used_sms) * 100, 2)
+        failed_pct = round((failed_sms / used_sms) * 100, 5)
         rb_pct_limit = user.profile.rollback_pct
         if failed_pct > rb_pct_limit:
             rollback_sms = round((failed_pct - rb_pct_limit) * used_sms / 100)
@@ -336,7 +357,8 @@ def rollback(request, id, save):
             "failed_sms": failed_sms,
             "failed_pct": failed_pct,
             "rb_pct_limit": rb_pct_limit,
-            "rollback_sms": rollback_sms
+            "rollback_sms": rollback_sms,
+            "rollbacks": rollbacks,
         }
     else:
         rb = Rollback.objects.filter(user=user).last()
@@ -350,11 +372,13 @@ def rollback(request, id, save):
             "failed_sms": rb.failed_sms,
             "failed_pct": rb.failed_sms_pct,
             "rb_pct_limit": user.profile.rollback_pct,
-            "rollback_sms": rb.rollback_sms
+            "rollback_sms": rb.rollback_sms,
+            "rollbacks": rollbacks,
         }
     return render(request, "services/rollback.html", context)
 
 
+@login_required(login_url="login")
 def generate_pdf(request, id):
     rb = Rollback.objects.get(id=id)
     
