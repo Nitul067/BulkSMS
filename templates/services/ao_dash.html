@@ -9,12 +9,25 @@
     <div class="col-md-12">
       <div class="card mb-4">
           <div class="row card-header">
-            <div class="col-9">
+            <div class="col-5">
               <h5 class="">{{ key }}</h5>
             </div>
-            <div class="col-3 text-center">
-              <a class="text-uppercase text-success" href="{% url 'rollback' id=values.id save=0 %}">Rollback</a>
+            {% if values.amount %}
+            <div class="col-2 text-center">
+              <a class="text-uppercase text-primary" href="{% url 'customer_recharge' id=values.id %}">Recharges</a>
             </div>
+            {% endif %}
+            {% if values.transactions %}
+            <div class="col-2 text-center">
+              <a class="text-uppercase text-primary" href="{% url 'customer_trans' id=values.id %}">Transactions</a>
+            </div>
+            <div class="col-2 text-center">
+              <a class="text-uppercase text-primary" href="{% url 'rollback' id=values.id save=0 %}">Rollback</a>
+            </div>
+            <div class="col-1 text-center">
+              <a class="text-uppercase text-primary" href="{% url 'pnl' id=values.id%}">P&L</a>
+            </div>
+            {% endif %}
           </div>
           <div class="card-body">
             <div class="row">

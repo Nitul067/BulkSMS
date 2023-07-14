@@ -90,7 +90,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # Scheduler config
 
-SCHEDULER_AUTOSTART = True
+SCHEDULER_AUTOSTART = False
 
 
 # Password validation

@@ -4,12 +4,17 @@ from .models import Recharge, Transaction, Tariff
 
 tariff = Tariff.objects.all()
 amount_list = [("", "Select Amount")]
+plan_list = [("", "Select Plan")]
 for row in tariff:
     if (row.value, row.value) not in amount_list:
         amount_list.append((row.value, row.value))
+        
+    if (row.plan, row.plan) not in plan_list:
+        plan_list.append((row.plan, row.plan))
 
 
 class RechargeForm(forms.ModelForm):
+    PLAN_CHOICES = tuple(plan_list)
     AMOUNT_CHOICES = tuple(amount_list)
     SMS_COUNT_CHOICES = (
         ("", "Select SMS_Count"),
@@ -20,6 +25,7 @@ class RechargeForm(forms.ModelForm):
         ('Failed', 'Failed'),
     )
     
+    # plan = forms.FloatField(widget=forms.Select(choices=PLAN_CHOICES, attrs={"id": "plan", "class": "form-select"}))
     amount = forms.FloatField(widget=forms.Select(choices=AMOUNT_CHOICES, attrs={"id": "amount", "class": "form-select"}))
     sms_count = forms.IntegerField(widget=forms.Select(choices=SMS_COUNT_CHOICES, attrs={"id": "sms_count", "class": "form-select"}))
     status = forms.CharField(widget=forms.Select(choices=STATUS_CHOICES, attrs={"class": "form-select"}), initial="Completed")

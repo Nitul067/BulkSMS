@@ -26,8 +26,10 @@ def ao_dash(request):
             total_values[user.profile.system_id] = {}
             recharge = Recharge.objects.filter(user=user).last()
             message = Message.objects.filter(user=user).last()
+            transactions = Transaction.objects.filter(user=user)
             try:
                 total_values[user.profile.system_id]["id"] = user.id
+                total_values[user.profile.system_id]["transactions"] = transactions
                 total_values[user.profile.system_id]["amount"] = recharge.amount
                 total_values[user.profile.system_id]["total_sms"] = recharge.sms_count
                 total_values[user.profile.system_id]["recharge_date"] = recharge.recharge_date
@@ -37,6 +39,7 @@ def ao_dash(request):
                 total_values[user.profile.system_id]["forwarded_sms"] = message.forwarded_sms
                 total_values[user.profile.system_id]["remaining_sms"] = recharge.sms_count - message.cur_used_sms
             except:
+                total_values[user.profile.system_id]["transactions"] = None
                 total_values[user.profile.system_id]["amount"] = None
                 total_values[user.profile.system_id]["total_sms"] = None
                 total_values[user.profile.system_id]["recharge_date"] = None
@@ -376,6 +379,89 @@ def rollback(request, id, save):
             "rollbacks": rollbacks,
         }
     return render(request, "services/rollback.html", context)
+
+
+@login_required(login_url="login")
+def customer_trans(request, id):
+    user = User.objects.get(id=id)
+    transactions = Transaction.objects.filter(user=user)
+    
+    context = {
+        "user": user,
+        "transactions": transactions,
+    }
+    return render(request, "services/customer_trans.html", context)
+
+
+@login_required(login_url="login")
+def customer_recharge(request, id):
+    user = User.objects.get(id=id)
+    recharges = Recharge.objects.filter(user=user)
+    
+    context = {
+        "user": user,
+        "recharges": recharges,
+    }
+    return render(request, "services/customer_recharge.html", context)
+
+
+@login_required(login_url="login")
+def pnl(request, id):
+    user = User.objects.get(id=id)
+    recharge = Recharge.objects.filter(user=user).last()
+    transactions = Transaction.objects.filter(user=user)
+    
+    used_sms = transactions.aggregate(Sum("to_scrubber"))["to_scrubber__sum"]
+    success_sms = transactions.aggregate(Sum("telco_success"))["telco_success__sum"]
+    fail_sms = used_sms - success_sms
+    success_sms_rate = round((success_sms / used_sms) * 100, 5)
+    
+    dot_rate = 15
+    tanla_rate = 30
+    licence_offnet_rate = 12.35
+    licence_onnet_rate = 12.35
+    rollback_rate = user.profile.rollback_pct 
+    amount = recharge.amount
+
+    sms_count = recharge.sms_count                              # X
+    base_rate = round(amount / sms_count * 100, 5)              # A
+    without_gst = round(base_rate / 1.18, 5)                    # B
+    iuc_charge = 7                                              # C
+    after_iuc = round(without_gst - iuc_charge, 5)              # D
+    scrubbing_charge = 1                                        # E
+    dot_charge = round(scrubbing_charge * dot_rate / 100, 5)                # F
+    final_scrubbing_charge = round(scrubbing_charge - dot_charge, 5)        # G
+    tanla_charge = round(final_scrubbing_charge * tanla_rate / 100, 5)      # H
+    bsnl_revenue = scrubbing_charge - dot_charge - tanla_charge             # I
+    licence_fee_offnet = round((after_iuc + bsnl_revenue) * licence_offnet_rate / 100, 5)       # J1
+    licence_fee_onnet = round((without_gst + bsnl_revenue) * licence_onnet_rate / 100, 5)       # J2
+    offnet_pnl_per_sms = after_iuc - dot_charge - tanla_charge - licence_fee_offnet             # K1
+    onnet_pnl_per_sms = without_gst - dot_charge - tanla_charge - licence_fee_onnet             # K2
+    offnet_market_share = 95                                    # L1
+    onnet_market_share = 100 - offnet_market_share              # L2
+    # success_sms_rate = 60                                       # M1
+    fail_sms_rate = 100 - success_sms_rate                      # M2
+    # success_sms = round(sms_count * success_sms_rate / 100)     # N
+    offnet_success = round(success_sms * offnet_market_share / 100)                             # O1
+    onnet_success = round(success_sms * onnet_market_share / 100)                               # O2
+    offnet_pnl = round(offnet_success * offnet_pnl_per_sms / 100)                               # P1
+    onnet_pnl = round(onnet_success * onnet_pnl_per_sms / 100)                                  # P2
+    success_sms_pnl = offnet_pnl + onnet_pnl                                                    # Q
+    # fail_sms = round(sms_count * fail_sms_rate / 100)                                           # R
+    rollback_sms = round(sms_count * (fail_sms_rate - rollback_rate) / 100)                     # S
+    fail_sms_cost_to_customer = fail_sms - rollback_sms                                         # T
+    fail_sms_pnl = round(fail_sms_cost_to_customer * onnet_pnl_per_sms / 100)                   # U
+    bsnl_pnl = success_sms_pnl + fail_sms_pnl                                                   # Z
+    
+    pnl_pct = round(bsnl_pnl / amount * 100, 2)
+    
+    context = {
+        "user_info": user,
+        "amount": amount,
+        "pnl": bsnl_pnl,
+        "pnl_pct": pnl_pct,
+    }
+    return render(request, "services/pnl.html", context)
 
 
 @login_required(login_url="login")

@@ -10,6 +10,9 @@ urlpatterns = [
     path("upload_trans/", views.upload_transactions, name="upload_trans"),
     path("add_trans/", views.add_transaction, name="add_trans"),
     path("rollback/<int:id>/<int:save>/", views.rollback, name="rollback"),
+    path("customer_trans/<int:id>/", views.customer_trans, name="customer_trans"),
+    path("customer_recharge/<int:id>/", views.customer_recharge, name="customer_recharge"),
+    path("pnl/<int:id>/", views.pnl, name="pnl"),
     
     path("rollback/<int:id>/pdf/", views.generate_pdf, name="generate_pdf"),
     path("ajax/get_sms", views.ajax_sms_data, name="ajax_sms_data"),

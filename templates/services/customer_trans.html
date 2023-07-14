@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col mb-4 mb-md-0">
+        <div class="card">
+            <div class="card-body my-3">
+              <h5 class="card-title mb-4">SMS Transactions History - {{ user.profile.system_id }}</h5>
+              {% if transactions %}
+              <div class="table-responsive text-nowrap text-center">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>trans_date</th>
+                      <th>nature</th>
+                      <th>header</th>
+                      <th>to_scrubber</th>
+                      <th>to_telco</th>
+                      <th>telco_success/th>
+                      <th>to_telco_onnet</th>
+                      <th>telco_onnet_success</th>
+                      <th>to_telco_offnet</th>
+                      <th>telco_offnet_success</th>
+                    </tr>
+                  </thead>
+                  <tbody class="table-border-bottom-0">
+                    {% for transaction in transactions %}
+                      <tr>
+                        <td>{{ transaction.trans_date }}</a></td>
+                        <td>{{ transaction.nature }}</td>
+                        <td>{{ transaction.header }}</td>
+                        <td>{{ transaction.to_scrubber }}</td>
+                        <td>{{ transaction.to_telco }}</td>
+                        <td>{{ transaction.telco_success}}</a></td>
+                        <td>{{ transaction.to_telco_onnet }}</td>
+                        <td>{{ transaction.telco_onnet_success }}</td>
+                        <td>{{ transaction.to_telco_offnet }}</td>
+                        <td>{{ transaction.telco_offnet_success }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <h6>No any transaction found.</h6>
+              {% endif %}
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
