@@ -15,7 +15,7 @@ def start():
         logging.getLogger('apscheduler').setLevel(logging.DEBUG)
 
     scheduler.add_job(send_message, "cron", id="message", 
-                      minute=51, hour=17, day_of_week="mon-sat", 
+                      minute=30, hour=17, day_of_week="mon-sat", 
                       replace_existing=True)
 
     scheduler.start()
